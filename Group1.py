@@ -35,24 +35,23 @@ def load_data():
 
 # ----------------- Image Fetching -----------------
 def fetch_place_images(place_name):
+    proxy = "https://corsproxy.io/?"
     PIXABAY_API_KEY = "50958560-4c04addfc42591891ef9be539"
-    url = "https://pixabay.com/api/"
-    params = {
-        "key": PIXABAY_API_KEY,
-        "q": place_name,
-        "image_type": "photo",
-        "per_page": 3
-    }
-    response = requests.get(url, params=params)
+    
+    # We build the full URL manually so the proxy processes it correctly
+    target_url = f"https://pixabay.com/api/?key={PIXABAY_API_KEY}&q={place_name}&image_type=photo&per_page=3"
+    
+    response = requests.get(proxy + target_url)
     if response.status_code == 200:
         return [hit["webformatURL"] for hit in response.json()["hits"]]
-    return []
 
 # ----------------- Geolocation & Weather -----------------
 def get_coordinates_osm(location):
-    url = f"https://nominatim.openstreetmap.org/search?q={location}&format=json"
+    proxy = "https://corsproxy.io/?"
+    target_url = f"https://nominatim.openstreetmap.org/search?q={location}&format=json"
+    
     headers = {'User-Agent': 'Mozilla/5.0'}
-    response = requests.get(url, headers=headers)
+    response = requests.get(proxy + target_url, headers=headers)
     if response.status_code == 200:
         data = response.json()
         if data:
@@ -73,9 +72,11 @@ def get_local_time(lat, lon, utc_time_str):
         return utc_time_str, "UTC"
 
 def get_metno_weather(lat, lon):
+    proxy = "https://corsproxy.io/?"
+    target_url = f"https://api.met.no/weatherapi/locationforecast/2.0/compact?lat={lat}&lon={lon}"
+    
     headers = {"User-Agent": "weather-checker/1.0 contact@example.com"}
-    url = f"https://api.met.no/weatherapi/locationforecast/2.0/compact?lat={lat}&lon={lon}"
-    response = requests.get(url, headers=headers)
+    response = requests.get(proxy + target_url, headers=headers)
     if response.status_code == 200:
         data = response.json()
         timeslot = data["properties"]["timeseries"][0]
