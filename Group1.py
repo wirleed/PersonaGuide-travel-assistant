@@ -5,7 +5,6 @@ import streamlit.components.v1 as components
 import pandas as pd
 import requests
 from datetime import datetime
-from timezonefinder import TimezoneFinder
 import pytz
 import difflib
 import matplotlib.pyplot as plt
@@ -61,15 +60,26 @@ def get_coordinates_osm(location):
     return None, None
 
 def get_local_time(lat, lon, utc_time_str):
-    utc_time = datetime.strptime(utc_time_str, "%Y-%m-%dT%H:%M:%SZ")
-    utc_time = utc_time.replace(tzinfo=pytz.utc)
-    tf = TimezoneFinder()
-    timezone_str = tf.timezone_at(lat=lat, lng=lon)
-    if timezone_str:
-        local_time = utc_time.astimezone(pytz.timezone(timezone_str))
-        return local_time.strftime("%Y-%m-%d %H:%M:%S"), timezone_str
-    else:
-        return utc_time_str, "UTC"
+    # Route through the CORS proxy to a free Timezone API
+    proxy = "https://corsproxy.io/?"
+    target_url = f"https://timeapi.io/api/TimeZone/coordinate?latitude={lat}&longitude={lon}"
+    
+    try:
+        response = requests.get(proxy + target_url)
+        if response.status_code == 200:
+            data = response.json()
+            timezone_str = data.get("timeZone", "UTC")
+            
+            # Convert the time based on the fetched timezone
+            utc_time = datetime.strptime(utc_time_str, "%Y-%m-%dT%H:%M:%SZ")
+            utc_time = utc_time.replace(tzinfo=pytz.utc)
+            local_time = utc_time.astimezone(pytz.timezone(timezone_str))
+            
+            return local_time.strftime("%Y-%m-%d %H:%M:%S"), timezone_str
+    except Exception:
+        pass
+        
+    return utc_time_str, "UTC"
 
 def get_metno_weather(lat, lon):
     proxy = "https://corsproxy.io/?"
