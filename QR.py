@@ -1,7 +1,7 @@
 import qrcode
 
 # Your Streamlit app URL
-url = "https://group1-introtoia-depw9xh7sb4ntdoerl52dw.streamlit.app/"
+url = "https://wirleed.github.io/](https://wirleed.github.io/"
 
 # Create QR code
 qr = qrcode.QRCode(box_size=10, border=4)
