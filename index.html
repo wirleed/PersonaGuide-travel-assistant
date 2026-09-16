@@ -11,8 +11,8 @@
     <script>
       stlite.mount(
         {
-          requirements: ["pandas"], // Add other libraries from your requirements.txt here
-          entrypoint: "QR.py", // This tells it which Python file to run first
+          requirements: ["pandas", "requests", "timezonefinder", "pytz", "matplotlib", "qrcode"],
+          entrypoint: "QR.py", 
           files: {
             "QR.py": { url: "./QR.py" },
             "Group1.py": { url: "./Group1.py" },
