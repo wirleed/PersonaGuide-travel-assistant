@@ -676,7 +676,7 @@ html, body, [class*="css"] {
     background-color: #121212;
     color: white;
 }
-<style>
+</style>
 """, unsafe_allow_html=True)
 
 # ---------- Particle Effect & Snow ----------
