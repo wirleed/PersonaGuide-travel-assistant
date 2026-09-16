@@ -1,3 +1,4 @@
+import urllib.parse
 import streamlit as st
 import random
 import base64
@@ -34,43 +35,49 @@ def load_data():
 
 # ----------------- Image Fetching -----------------
 def fetch_place_images(place_name):
-    proxy = "https://corsproxy.io/?"
     PIXABAY_API_KEY = "50958560-4c04addfc42591891ef9be539"
-    
-    # We build the full URL manually so the proxy processes it correctly
     target_url = f"https://pixabay.com/api/?key={PIXABAY_API_KEY}&q={place_name}&image_type=photo&per_page=3"
     
-    response = requests.get(proxy + target_url)
-    if response.status_code == 200:
-        return [hit["webformatURL"] for hit in response.json()["hits"]]
+    # Safely encode the URL so the proxy doesn't break at the '&' symbols
+    encoded_url = urllib.parse.quote(target_url, safe='')
+    proxy_url = f"https://corsproxy.io/?{encoded_url}"
+    
+    try:
+        response = requests.get(proxy_url)
+        if response.status_code == 200:
+            return [hit["webformatURL"] for hit in response.json()["hits"]]
+    except Exception:
+        pass
+    return []
 
 # ----------------- Geolocation & Weather -----------------
 def get_coordinates_osm(location):
-    proxy = "https://corsproxy.io/?"
     target_url = f"https://nominatim.openstreetmap.org/search?q={location}&format=json"
+    encoded_url = urllib.parse.quote(target_url, safe='')
+    proxy_url = f"https://corsproxy.io/?{encoded_url}"
     
     headers = {'User-Agent': 'Mozilla/5.0'}
-    response = requests.get(proxy + target_url, headers=headers)
-    if response.status_code == 200:
-        data = response.json()
-        if data:
-            lat = float(data[0]['lat'])
-            lon = float(data[0]['lon'])
-            return lat, lon
+    try:
+        response = requests.get(proxy_url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            if data:
+                return float(data[0]['lat']), float(data[0]['lon'])
+    except Exception:
+        pass
     return None, None
 
 def get_local_time(lat, lon, utc_time_str):
-    # Route through the CORS proxy to a free Timezone API
-    proxy = "https://corsproxy.io/?"
     target_url = f"https://timeapi.io/api/TimeZone/coordinate?latitude={lat}&longitude={lon}"
+    encoded_url = urllib.parse.quote(target_url, safe='')
+    proxy_url = f"https://corsproxy.io/?{encoded_url}"
     
     try:
-        response = requests.get(proxy + target_url)
+        response = requests.get(proxy_url)
         if response.status_code == 200:
             data = response.json()
             timezone_str = data.get("timeZone", "UTC")
             
-            # Convert the time based on the fetched timezone
             utc_time = datetime.strptime(utc_time_str, "%Y-%m-%dT%H:%M:%SZ")
             utc_time = utc_time.replace(tzinfo=pytz.utc)
             local_time = utc_time.astimezone(pytz.timezone(timezone_str))
@@ -82,34 +89,40 @@ def get_local_time(lat, lon, utc_time_str):
     return utc_time_str, "UTC"
 
 def get_metno_weather(lat, lon):
-    proxy = "https://corsproxy.io/?"
     target_url = f"https://api.met.no/weatherapi/locationforecast/2.0/compact?lat={lat}&lon={lon}"
+    encoded_url = urllib.parse.quote(target_url, safe='')
+    proxy_url = f"https://corsproxy.io/?{encoded_url}"
     
     headers = {"User-Agent": "weather-checker/1.0 contact@example.com"}
-    response = requests.get(proxy + target_url, headers=headers)
-    if response.status_code == 200:
-        data = response.json()
-        timeslot = data["properties"]["timeseries"][0]
-        timestamp_utc = timeslot["time"]
-        details = timeslot["data"]["instant"]["details"]
-        temperature = details.get("air_temperature", "N/A")
-        humidity = details.get("relative_humidity", "N/A")
-        wind_speed = details.get("wind_speed", "N/A")
-        condition = "N/A"
-        next_data = timeslot["data"].get("next_1_hours") or timeslot["data"].get("next_6_hours")
-        if next_data and "summary" in next_data:
-            condition = next_data["summary"].get("symbol_code", "N/A").replace("_", " ").capitalize()
-        local_time, timezone = get_local_time(lat, lon, timestamp_utc)
-        return {
-            "local_time": local_time,
-            "timezone": timezone,
-            "temperature": temperature,
-            "humidity": humidity,
-            "wind_speed": wind_speed,
-            "condition": condition
-        }
-    else:
-        return None
+    try:
+        response = requests.get(proxy_url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            timeslot = data["properties"]["timeseries"][0]
+            timestamp_utc = timeslot["time"]
+            details = timeslot["data"]["instant"]["details"]
+            
+            temperature = details.get("air_temperature", "N/A")
+            humidity = details.get("relative_humidity", "N/A")
+            wind_speed = details.get("wind_speed", "N/A")
+            condition = "N/A"
+            
+            next_data = timeslot["data"].get("next_1_hours") or timeslot["data"].get("next_6_hours")
+            if next_data and "summary" in next_data:
+                condition = next_data["summary"].get("symbol_code", "N/A").replace("_", " ").capitalize()
+                
+            local_time, timezone = get_local_time(lat, lon, timestamp_utc)
+            return {
+                "local_time": local_time,
+                "timezone": timezone,
+                "temperature": temperature,
+                "humidity": humidity,
+                "wind_speed": wind_speed,
+                "condition": condition
+            }
+    except Exception:
+        pass
+    return None
 
 # ----------------- Quiz & Theme Handling -----------------
 def get_quiz_result(df, theme):
