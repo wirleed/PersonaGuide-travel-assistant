@@ -38,9 +38,8 @@ def fetch_place_images(place_name):
     PIXABAY_API_KEY = "50958560-4c04addfc42591891ef9be539"
     target_url = f"https://pixabay.com/api/?key={PIXABAY_API_KEY}&q={place_name}&image_type=photo&per_page=3"
     
-    # Safely encode the URL so the proxy doesn't break at the '&' symbols
     encoded_url = urllib.parse.quote(target_url, safe='')
-    proxy_url = f"https://corsproxy.io/?{encoded_url}"
+    proxy_url = f"https://api.allorigins.win/raw?url={encoded_url}"
     
     try:
         response = requests.get(proxy_url)
@@ -54,7 +53,7 @@ def fetch_place_images(place_name):
 def get_coordinates_osm(location):
     target_url = f"https://nominatim.openstreetmap.org/search?q={location}&format=json"
     encoded_url = urllib.parse.quote(target_url, safe='')
-    proxy_url = f"https://corsproxy.io/?{encoded_url}"
+    proxy_url = f"https://api.allorigins.win/raw?url={encoded_url}"
     
     headers = {'User-Agent': 'Mozilla/5.0'}
     try:
@@ -70,7 +69,7 @@ def get_coordinates_osm(location):
 def get_local_time(lat, lon, utc_time_str):
     target_url = f"https://timeapi.io/api/TimeZone/coordinate?latitude={lat}&longitude={lon}"
     encoded_url = urllib.parse.quote(target_url, safe='')
-    proxy_url = f"https://corsproxy.io/?{encoded_url}"
+    proxy_url = f"https://api.allorigins.win/raw?url={encoded_url}"
     
     try:
         response = requests.get(proxy_url)
@@ -91,7 +90,7 @@ def get_local_time(lat, lon, utc_time_str):
 def get_metno_weather(lat, lon):
     target_url = f"https://api.met.no/weatherapi/locationforecast/2.0/compact?lat={lat}&lon={lon}"
     encoded_url = urllib.parse.quote(target_url, safe='')
-    proxy_url = f"https://corsproxy.io/?{encoded_url}"
+    proxy_url = f"https://api.allorigins.win/raw?url={encoded_url}"
     
     headers = {"User-Agent": "weather-checker/1.0 contact@example.com"}
     try:
