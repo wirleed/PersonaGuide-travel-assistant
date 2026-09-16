@@ -11,6 +11,7 @@ qr.make(fit=True)
 img = qr.make_image(fill_color="black", back_color="white")
 
 # Save QR code image
-img.save("streamlit_qr.png")
+# Save QR code image
+img.save("walid.png")
 
 print("✅ QR code generated and saved as 'walid.png'")
